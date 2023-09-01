@@ -1,8 +1,10 @@
 from PIL import Image
 import pandas as pd
 
-# Open the image using Pillow
+# Path to your input image
 image_path = 'your_image.png'
+
+# Open the image using Pillow
 img = Image.open(image_path)
 
 # Convert the image to grayscale
@@ -22,6 +24,15 @@ objects_boxes = ndimage.find_objects(label_objects)
 # Initialize a list to hold the table data
 table_data = []
 
+# Text extraction method (based on pixel intensity)
+def extract_text_from_roi(roi):
+    # Simple method: Count white pixels and assume them as text
+    white_pixel_count = sum(1 for pixel in roi.getdata() if pixel == 255)
+    if white_pixel_count > 0:
+        return "Text Detected"
+    else:
+        return ""
+
 # Iterate through detected objects (potential table cells)
 for obj_box in objects_boxes:
     obj = binary_img[obj_box]
@@ -29,10 +40,8 @@ for obj_box in objects_boxes:
     # Extract the region of interest (ROI) for the potential table cell
     roi = gray_img.crop(obj_box)
 
-    # Use a simple text extraction method for the ROI (replace with your logic)
-    cell_text = "Your_Text_Extraction_Method(roi)"  # Replace with your extraction method
-
-    cell_text = cell_text.strip()
+    # Use the text extraction method for the ROI
+    cell_text = extract_text_from_roi(roi).strip()
 
     # Split cell text by tab or comma to identify columns
     cell_data = [cell.strip() for cell in cell_text.split('\t')]  # Assuming tab as column separator
