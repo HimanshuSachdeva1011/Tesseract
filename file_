@@ -1,0 +1,51 @@
+import cv2
+import numpy as np
+import pandas as pd
+
+# Load the image using OpenCV
+image_path = 'your_image.png'
+img = cv2.imread(image_path)
+
+# Convert the image to grayscale for better processing
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+# Apply thresholding to the grayscale image
+_, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+# Find contours in the thresholded image
+contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+# Filter out small contours (adjust the area threshold as needed)
+min_contour_area = 500
+table_contours = [contour for contour in contours if cv2.contourArea(contour) > min_contour_area]
+
+# Sort contours by their Y-coordinate to arrange them in rows
+table_contours.sort(key=lambda contour: cv2.boundingRect(contour)[1])
+
+# Initialize a list to hold the table data
+table_data = []
+
+for contour in table_contours:
+    x, y, w, h = cv2.boundingRect(contour)
+
+    # Crop each cell from the original image
+    cell_image = img[y:y+h, x:x+w]
+
+    # Use OCR (Tesseract or another OCR library) to extract text from each cell
+    cell_text = "Your_OCR_Function(cell_image)"  # Replace with your OCR function
+    cell_text = cell_text.strip()
+
+    # Split cell text by tab or comma to identify columns
+    cell_data = [cell.strip() for cell in cell_text.split('\t')]  # Assuming tab as column separator
+
+    if len(cell_data) > 1:
+        table_data.append(cell_data)
+
+# Convert the table data to a Pandas DataFrame
+table_df = pd.DataFrame(table_data)
+
+# Save the DataFrame as a CSV file
+csv_file_path = 'table_data.csv'
+table_df.to_csv(csv_file_path, index=False)
+
+print(f"Table extracted and saved as {csv_file_path}")
